@@ -1,0 +1,66 @@
+---
+title: "Brain Stimulated MOO"
+author: "Bastien Boutonnet"
+date: "17 December 2014"
+output: html_document
+---
+
+```{r echo=FALSE}
+library(ggplot2)
+library(lme4)
+library(plyr)
+library(dplyr)
+library(car)
+library(lmSupport)
+
+dat <- read.csv("brainStimMOOAllVars.csv",header=T)
+
+#CIs Function
+getCIs<- function (x,n) {
+  binom.test(round(x*n,0),n)$conf.int[1:2]
+}
+
+byMooney <- ddply(dat, c('Name','electrode'), summarise,
+                  acc=mean(isCorrect, na.rm=T),
+                  rt=mean(Timing_1, na.rm=T),
+                  conf=mean(Confidence, na.rm=T))
+```
+
+#Naming Accuracy by Mooney
+```{r echo=FALSE}
+#Compute CIs
+CIs = sapply(byMooney$acc,getCIs,n=20)
+limits <- aes(ymin = CIs[1,], ymax=CIs[2,])
+```
+
+```{r echo=FALSE}
+#Plot Data
+##Style options for the graph
+PimpMyPlot <- theme(text=element_text(size=14,family="Helvetica"))+
+  theme(axis.line=element_line(colour='black'))+
+  theme(axis.text=element_text(colour="black"))+
+  theme(panel.grid.major.y=element_line(linetype='dotted',colour='grey50',size=0.3))+
+  theme(panel.grid.major.x=element_line(linetype='dashed',colour='grey50',size=0.3))+
+  theme(panel.background=element_blank())
+
+#Reorder for Graph
+#ORDER X Axis by Free Naming Accuracy of No Stim group
+vals = byMooney[ byMooney$electrode == 3,]
+xvals = vals[with(vals, order(-acc)), ]$Name
+byMooney$mooneyReord <- factor(byMooney$Name, levels = xvals)
+
+byMooney$electrode <- as.factor(byMooney$electrode)
+```
+
+```{r}
+ggplot(byMooney, aes(x=mooneyReord,y=acc,colour=electrode))+
+  geom_point(size=3)+
+  geom_errorbar(limits,width=.2)+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  labs(x ="Picture",y="Accuracy")+
+  #scale_colour_manual(values=c("#e41a1c",'#377eb8'))+
+  #scale_y_continuous(expand = c(0,0))+
+  #coord_cartesian(ylim=c(0,1))+
+  #theme(legend.position="none")+
+  PimpMyPlot
+```
