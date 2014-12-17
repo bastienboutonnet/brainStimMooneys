@@ -14,13 +14,17 @@ library(car)
 library(lmSupport)
 
 dat <- read.csv("brainStimMOOAllVars.csv",header=T)
+dat$electrode <- as.factor(dat$electrode)
+dat$elec <- varRecode(dat$electrode, c(1,2,3),c("Anodal","Cathodal","No Stimulation"))
 
 #CIs Function
 getCIs<- function (x,n) {
   binom.test(round(x*n,0),n)$conf.int[1:2]
 }
 
-byMooney <- ddply(dat, c('Name','electrode'), summarise,
+byParticipant <- ddply(dat, c("subjcode","elec"), summarise, acc=mean(isCorrect,na.rm=T))
+
+byMooney <- ddply(dat, c('Name','elec'), summarise,
                   acc=mean(isCorrect, na.rm=T),
                   rt=mean(Timing_1, na.rm=T),
                   conf=mean(Confidence, na.rm=T))
@@ -55,7 +59,7 @@ byMooney$electrode <- as.factor(byMooney$electrode)
 ```{r}
 ggplot(byMooney, aes(x=mooneyReord,y=acc,colour=electrode))+
   geom_point(size=3)+
-  geom_errorbar(limits,width=.2)+
+  #geom_errorbar(limits,width=.2)+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
   labs(x ="Picture",y="Accuracy")+
   #scale_colour_manual(values=c("#e41a1c",'#377eb8'))+
