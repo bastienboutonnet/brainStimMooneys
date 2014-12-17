@@ -33,7 +33,7 @@ byMooney <- ddply(dat, c('Name','elec'), summarise,
 #Naming Accuracy by Mooney
 ```{r echo=FALSE}
 #Compute CIs
-CIs = sapply(byMooney$acc,getCIs,n=20)
+CIs = sapply(byMooney$acc,getCIs,n=8)
 limits <- aes(ymin = CIs[1,], ymax=CIs[2,])
 ```
 
@@ -49,15 +49,14 @@ PimpMyPlot <- theme(text=element_text(size=14,family="Helvetica"))+
 
 #Reorder for Graph
 #ORDER X Axis by Free Naming Accuracy of No Stim group
-vals = byMooney[ byMooney$electrode == 3,]
+vals = byMooney[ byMooney$elec == "No Stimulation",]
 xvals = vals[with(vals, order(-acc)), ]$Name
 byMooney$mooneyReord <- factor(byMooney$Name, levels = xvals)
 
-byMooney$electrode <- as.factor(byMooney$electrode)
 ```
 
 ```{r}
-ggplot(byMooney, aes(x=mooneyReord,y=acc,colour=electrode))+
+ggplot(byMooney, aes(x=mooneyReord,y=acc,colour=elec))+
   geom_point(size=3)+
   #geom_errorbar(limits,width=.2)+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
