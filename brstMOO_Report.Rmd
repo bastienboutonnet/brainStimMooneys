@@ -5,6 +5,14 @@ date: "17 December 2014"
 output: html_document
 ---
 
+#TODO:
+- filter out bad/unfinished participants
+  - remove from big data file
+  - save new big data file
+  - move "old" datafile to "old datafiles" folder
+- group by mooney difficulty?
+- run some models
+
 ```{r echo=FALSE}
 library(ggplot2)
 library(lme4)
@@ -24,6 +32,7 @@ getCIs<- function (x,n) {
 
 byParticipant <- ddply(dat, c("subjcode","elec"), summarise, acc=mean(isCorrect,na.rm=T))
 
+#Summarise by Mooney for plot essentially.
 byMooney <- ddply(dat, c('Name','elec'), summarise,
                   acc=mean(isCorrect, na.rm=T),
                   rt=mean(Timing_1, na.rm=T),
@@ -58,12 +67,8 @@ byMooney$mooneyReord <- factor(byMooney$Name, levels = xvals)
 ```{r}
 ggplot(byMooney, aes(x=mooneyReord,y=acc,colour=elec))+
   geom_point(size=3)+
-  #geom_errorbar(limits,width=.2)+
+  geom_errorbar(limits,width=.2)+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
   labs(x ="Picture",y="Accuracy")+
-  #scale_colour_manual(values=c("#e41a1c",'#377eb8'))+
-  #scale_y_continuous(expand = c(0,0))+
-  #coord_cartesian(ylim=c(0,1))+
-  #theme(legend.position="none")+
   PimpMyPlot
 ```
