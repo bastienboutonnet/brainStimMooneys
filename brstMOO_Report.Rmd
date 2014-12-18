@@ -5,13 +5,8 @@ date: "17 December 2014"
 output: html_document
 ---
 
-#TODO:
-- filter out bad/unfinished participants
-  - remove from big data file
-  - save new big data file
-  - move "old" datafile to "old datafiles" folder
-- group by mooney difficulty?
-- run some models
+**TODO:**
+- find a better visualisation group by mooney difficulty?
 
 ```{r echo=FALSE}
 library(ggplot2)
@@ -66,13 +61,31 @@ xvals = vals[with(vals, order(-acc)), ]$Name
 byMooney$mooneyReord <- factor(byMooney$Name, levels = xvals)
 ```
 
-```{r}
-ggplot(byMooney, aes(x=mooneyReord,y=acc,colour=elec))+
+```{r fig.width=9}
+ggplot(byMooney, aes(x=mooneyReord,y=acc,colour=elec,group=elec))+
   geom_point(size=3)+
+  geom_line()+
   #geom_errorbar(limits,width=.2)+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
   labs(x ="Picture",y="Accuracy")+
   PimpMyPlot
+```
+
+#Median Split
+```{r}
+byMooneyNoStim <- ddply(subset(dat, electrode==3), c('Name'), summarise,
+                  acc=mean(isCorrect, na.rm=T))
+byMooneyNoStim$MedSplit <- as.integer(byMooneyNoStim$acc>median(byMooneyNoStim$acc))
+byMooneyNoStim$QrtSplit <- with(byMooneyNoStim, cut(acc, 
+                                breaks=quantile(acc, probs=seq(0,1, by=0.25)), 
+                                include.lowest=TRUE))
+byMooneyNoStim=byMooneyNoStim[c("Name","MedSplit","QrtSplit")]
+SplitDat <- merge(dat,byMooneyNoStim)
+SplitDat$QrtSplit <- as.factor(SplitDat$QrtSplit)
+
+ggplot(SplitDat, aes(x=QrtSplit,y=isCorrect,fill=elec))+
+  stat_summary(fun.y=mean, geom="bar",position=position_dodge(0.95))+
+  stat_summary(fun.data=mean_se, geom="errorbar",position=position_dodge(0.95),width=.2)
 ```
 
 #Predicting Accuracy from Stimulation Condition
