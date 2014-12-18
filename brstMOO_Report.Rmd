@@ -71,7 +71,7 @@ ggplot(byMooney, aes(x=mooneyReord,y=acc,colour=elec,group=elec))+
   PimpMyPlot
 ```
 
-#Median Split
+#Quartile Split
 ```{r}
 byMooneyNoStim <- ddply(subset(dat, electrode==3), c('Name'), summarise,
                   acc=mean(isCorrect, na.rm=T))
