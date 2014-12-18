@@ -24,13 +24,16 @@ library(lmSupport)
 dat <- read.csv("brainStimMOOAllVars.csv",header=T)
 dat$electrode <- as.factor(dat$electrode)
 dat$elec <- varRecode(dat$electrode, c(1,2,3),c("Anodal","Cathodal","No Stimulation"))
+elimPpts <- c("WFM102","WFM104",'WFM106','WFM107','WFM127','wfm127','WFM131','WFM133','WFM132','WFM138')
+dat <- dat[!(dat$subjcode %in% elimPpts),]
 
 #CIs Function
 getCIs<- function (x,n) {
   binom.test(round(x*n,0),n)$conf.int[1:2]
 }
 
-byParticipant <- ddply(dat, c("subjcode","elec"), summarise, acc=mean(isCorrect,na.rm=T))
+byParticipant <- ddply(dat, c("subjcode"), summarise, 
+                       acc=mean(isCorrect,na.rm=T))
 
 #Summarise by Mooney for plot essentially.
 byMooney <- ddply(dat, c('Name','elec'), summarise,
@@ -42,7 +45,7 @@ byMooney <- ddply(dat, c('Name','elec'), summarise,
 #Naming Accuracy by Mooney
 ```{r echo=FALSE}
 #Compute CIs
-CIs = sapply(byMooney$acc,getCIs,n=8)
+CIs = sapply(byMooney$acc,getCIs,n=9)
 limits <- aes(ymin = CIs[1,], ymax=CIs[2,])
 ```
 
@@ -61,14 +64,21 @@ PimpMyPlot <- theme(text=element_text(size=14,family="Helvetica"))+
 vals = byMooney[ byMooney$elec == "No Stimulation",]
 xvals = vals[with(vals, order(-acc)), ]$Name
 byMooney$mooneyReord <- factor(byMooney$Name, levels = xvals)
-
 ```
 
 ```{r}
 ggplot(byMooney, aes(x=mooneyReord,y=acc,colour=elec))+
   geom_point(size=3)+
-  geom_errorbar(limits,width=.2)+
+  #geom_errorbar(limits,width=.2)+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
   labs(x ="Picture",y="Accuracy")+
   PimpMyPlot
+```
+
+#Predicting Accuracy from Stimulation Condition
+
+```{r}
+dat$elecCent <- varRecode(dat$elec, c("Anodal","Cathodal","No Stimulation"),c(1,0,-1))
+m <- glmer(isCorrect~elecCent+(1|Name),data=dat,family='binomial')
+summary(m)
 ```

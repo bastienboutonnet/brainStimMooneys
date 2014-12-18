@@ -17,3 +17,6 @@ pullOtherVars:
 mergeAllVarsAndInfo:
 	echo “Merge Everything step”
 	python reorderFunctWASMooney.py
+
+makeReport: brstMOO_Report.Rmd
+	Rscript -e "rmarkdown::render('$<')"
